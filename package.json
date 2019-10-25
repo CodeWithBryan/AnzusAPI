@@ -1,0 +1,22 @@
+{
+  "name": "anzusapi",
+  "version": "0.1.0",
+  "description": "API for Anzus Game Server",
+  "main": "server.mjs",
+  "repository": "https://github.com/bryandesigning/AnzusAPI",
+  "author": "MrBoolean",
+  "license": "MIT",
+  "scripts": {
+    "start": "nodemon --watch *.mjs --experimental-modules",
+    "raw": "node --experimental-modules server.mjs"
+  },
+  "dependencies": {
+    "body-parser": "1.18.3",
+    "cors": "^2.8.4",
+    "express": "4.16.3",
+    "jsonwebtoken": "8.3.0",
+    "lodash": "^4.17.11",
+    "mariadb": "^2.0.0-alpha",
+    "morgan": "1.9.0"
+  }
+}
