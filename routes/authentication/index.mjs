@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { createJWToken } from '../../middleware/jwt'
+import { createJWToken } from '../../middleware/jwt.mjs'
 
 export function hashPassword(password) {
   return crypto.createHash('sha256').update(password).digest('hex');
@@ -29,7 +29,7 @@ export function register(req, res) {
       conn.query('SELECT * FROM admins WHERE username = ?', [ username ])
         .then(results => {
           if(results.length >= 1) {
-            conn.end();
+            conn.release();
             return res.status(500).send({
               status: 'error',
               statusCode: 500,
@@ -41,7 +41,7 @@ export function register(req, res) {
             'INSERT INTO admins (username, Password) VALUES (?, ?)',
             [ username, hashPassword(password) ]
           ).then(results => {
-              conn.end();
+              conn.release();
               res.status(200).send({
                 status: 'success',
                 statusCode: 200,
@@ -51,13 +51,13 @@ export function register(req, res) {
               });
             })
             .catch(err => {
-              conn.end();
+              conn.release();
               return res.status(500).send(err);
             });
 
         })
         .catch(err => {
-          conn.end();
+          conn.release();
           return res.status(500).send(err);
         });
       });
@@ -78,7 +78,7 @@ export function login(req, res) {
     .then(conn => {
       conn.query('SELECT * FROM admins WHERE username = ? AND password = ?', [ username, hashPassword(password) ])
         .then(results => {
-          conn.end();
+          conn.release();
 
           if(results.length < 1) {
             return res.status(400).send({
@@ -98,14 +98,9 @@ export function login(req, res) {
           });
         })
         .catch(err => {
-          conn.end();
+          conn.release();
           // TODO: Don't send raw SQL Errors
           return res.status(500).send(err);
         });
     });
-}
-
-export default {
-  login,
-  register
 }

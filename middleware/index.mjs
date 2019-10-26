@@ -1,4 +1,4 @@
-import { verifyJWTToken } from './jwt'
+import { verifyJWTToken } from './jwt.mjs'
 
 export function middleware (req, res, next) {
   if (!req.headers.authorization) {
@@ -32,9 +32,7 @@ export function middleware (req, res, next) {
           conn.query('SELECT * FROM admins WHERE username = ?', token.data.username)
             .then(results => {
               // Close our connection
-              conn.end();
-
-              console.log(results.length);
+              conn.release();
 
               // Return our results
               if(results.length < 1) {
@@ -47,13 +45,9 @@ export function middleware (req, res, next) {
               next();
             })
             .catch(err => {
-              conn.end();
+              conn.release();
               return res.status(500).send(err);
             });
         });
     });
-}
-
-export default {
-  middleware
 }

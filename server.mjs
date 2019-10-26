@@ -5,10 +5,11 @@ import fs from 'fs';
 import mariadb from 'mariadb';
 import cors from 'cors';
 
-import { middleware } from './middleware';
+import { middleware } from './middleware/index.mjs';
 import { login, register } from './routes/authentication/index.mjs';
 import { getLogs } from './routes/logs/index.mjs';
-import { getPlayer, getPlayerLogs, getPlayerMoneyHistory, getPlayerVehicles, getPlayerNames } from './routes/player/index.mjs';
+import { getPlayer, getPlayerLogs, getNonMoneyLogs, getPlayerMoneyHistory, getPlayerVehicles, getPlayerNames } from './routes/player/index.mjs';
+import { findPlayer } from './routes/search/index.mjs';
 
 const config = JSON.parse(fs.readFileSync('config.json'));
 const APIPort = config.port;
@@ -50,9 +51,11 @@ app.post('/register', register);
 app.get("/logs", middleware, getLogs);
 app.get("/player/:pid", middleware, getPlayer);
 app.get("/player/:pid/logs", middleware, getPlayerLogs);
+app.get("/player/:pid/logs/nomoney", middleware, getNonMoneyLogs)
 app.get("/player/:pid/money/history", middleware, getPlayerMoneyHistory);
 app.get("/player/:pid/vehicles", middleware, getPlayerVehicles);
 app.get("/playernames", middleware, getPlayerNames);
+app.get("/search/player/:search", middleware, findPlayer);
 
 app.listen(APIPort, () => {
   console.log(`Listening on PORT ${APIPort}`);

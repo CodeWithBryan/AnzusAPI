@@ -21,7 +21,7 @@ export function getPlayer(req, res) {
     .then(conn => {
       conn.query('SELECT * FROM players WHERE pid = ?', [ pid ])
         .then(results => {
-          conn.end();
+          conn.release();
 
           if (results.length !== 1) {
             return res.status(404).send({
@@ -38,7 +38,7 @@ export function getPlayer(req, res) {
           });
         })
         .catch(err => {
-          conn.end();
+          conn.release();
           return res.status(500).send(DBError);
         });
     });
@@ -66,7 +66,7 @@ export function getPlayerLogs(req, res) {
 
           conn.query(`SELECT * FROM player_logs WHERE pid = ? ORDER BY time ${direction} LIMIT ? OFFSET ?`, [ pid, limit, offset ])
           .then(results => {
-            conn.end();
+            conn.release();
 
             if (results.length < 1) {
               return res.status(404).send({
@@ -86,15 +86,57 @@ export function getPlayerLogs(req, res) {
             });
           })
           .catch(err => {
-            conn.end();
+            conn.release();
             return res.status(500).send(DBError);
           });
 
         })
         .catch(err => {
-          conn.end();
+          conn.release();
           return res.status(500).send(DBError);
         });
+    });
+}
+
+export function getNonMoneyLogs(req, res) {
+  let pid = req.params.pid;
+
+  if (pid.length !== 17) {
+    return res.status(500).send({
+      status: 'error',
+      statusCode: 500,
+      message: 'Invalid PID'
+    });
+  }
+
+  let duration = req.query.duration ? parseInt(req.query.duration, 0) : 2 * 60;
+
+  global.pool.getConnection()
+    .then(conn => {
+
+      conn.query(`SELECT * FROM player_logs WHERE pid = ? AND time > (now() - interval ? minute) AND action NOT IN ('bankChange','cashChange')`, [ pid, duration ])
+      .then(results => {
+        conn.release();
+
+        if (results.length < 1) {
+          return res.status(404).send({
+            status: 'error',
+            statusCode: 404,
+            message: `No logs for ${pid} for the last ${duration} minutes`
+          });
+        }
+
+        res.status(200).send({
+          status: 'success',
+          statusCode: 200,
+          data: results,
+        });
+      })
+      .catch(err => {
+        conn.release();
+        return res.status(500).send(DBError);
+      });
+
     });
 }
 
@@ -114,7 +156,7 @@ export function getPlayerMoneyHistory(req, res) {
     .then(conn => {
       conn.query(`SELECT * FROM player_logs WHERE pid=? AND action in ('cashChange','bankChange')`, [ pid ])
         .then(results => {
-          conn.end();
+          conn.release();
 
           if (results.length < 1) {
             return res.status(404).send({
@@ -131,7 +173,7 @@ export function getPlayerMoneyHistory(req, res) {
           });
         })
         .catch(err => {
-          conn.end();
+          conn.release();
           return res.status(500).send(DBError);
         });
     });
@@ -156,7 +198,7 @@ export function getPlayerVehicles(req, res) {
     .then(conn => {
       conn.query(`SELECT * FROM vehicles WHERE pid = ? ORDER BY id ${direction} LIMIT ? OFFSET ?`, [ pid, limit, offset ])
         .then(results => {
-          conn.end();
+          conn.release();
 
           if (results.length < 1) {
             return res.status(404).send({
@@ -173,7 +215,7 @@ export function getPlayerVehicles(req, res) {
           });
         })
         .catch(err => {
-          conn.end();
+          conn.release();
           return res.status(500).send(DBError);
         });
     });
@@ -190,11 +232,21 @@ export function getPlayerNames(req, res) {
     });
   }
 
+  let params = "?";
+  if (Array.isArray(pids)) {
+    pids.forEach((pid, i) => {
+      if (i === 0) {
+        return;
+      }
+      params = `${params}, ?`
+    });
+  }
+
   global.pool.getConnection()
     .then(conn => {
-      conn.query(`SELECT pid, name FROM players WHERE pid in (?)`, [ pids ])
+      conn.query(`SELECT pid, name FROM players WHERE pid IN (${params})`, pids)
         .then(results => {
-          conn.end();
+          conn.release();
 
           res.status(200).send({
             status: 'success',
@@ -203,17 +255,8 @@ export function getPlayerNames(req, res) {
           });
         })
         .catch(err => {
-          conn.end();
+          conn.release();
           return res.status(500).send(DBError);
         });
     });
-}
-
-
-export default {
-  getPlayer,
-  getPlayerLogs,
-  getPlayerMoneyHistory,
-  getPlayerVehicles,
-  getPlayerNames,
 }

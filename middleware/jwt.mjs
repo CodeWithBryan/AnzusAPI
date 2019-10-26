@@ -50,8 +50,3 @@ export function createJWToken(details)
 
   return token;
 }
-
-export default {
-  verifyJWTToken,
-  createJWToken
-}

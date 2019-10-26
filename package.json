@@ -8,7 +8,7 @@
   "license": "MIT",
   "scripts": {
     "start": "nodemon --watch *.mjs --experimental-modules",
-    "raw": "node --experimental-modules server.mjs"
+    "build": "rollup server.mjs --file dist/server.js --format cjs"
   },
   "dependencies": {
     "body-parser": "1.18.3",
