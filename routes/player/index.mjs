@@ -41,6 +41,9 @@ export function getPlayer(req, res) {
           conn.release();
           return res.status(500).send(DBError);
         });
+    })
+    .catch(err => {
+      return res.stats(500).send(err);
     });
 }
 
@@ -151,10 +154,11 @@ export function getPlayerMoneyHistory(req, res) {
     });
   }
 
+  let duration = req.query.duration ? parseInt(req.query.duration, 0) : 6 * 60;
 
   global.pool.getConnection()
     .then(conn => {
-      conn.query(`SELECT * FROM player_logs WHERE pid=? AND action in ('cashChange','bankChange')`, [ pid ])
+      conn.query(`SELECT * FROM player_logs WHERE pid=? AND time > (now() - interval ? minute) AND action in ('cashChange','bankChange')`, [ pid, duration ])
         .then(results => {
           conn.release();
 

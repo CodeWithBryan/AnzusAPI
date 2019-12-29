@@ -7,6 +7,8 @@ const DBError = {
 export function findPlayer(req, res) {
   let search = req.params.search;
 
+  console.log('findPlayer Route Called');
+
   let query = '';
   let params = [];
 
@@ -18,6 +20,8 @@ export function findPlayer(req, res) {
     query = "SELECT * FROM players WHERE name LIKE ? OR aliases LIKE '%?%'";
     params = [ search, search ];
   }
+
+  console.log(`Query Built ${query}`);
 
   global.pool.getConnection()
     .then(conn => {

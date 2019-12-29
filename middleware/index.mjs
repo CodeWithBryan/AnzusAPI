@@ -2,8 +2,9 @@ import { verifyJWTToken } from './jwt.mjs'
 
 export function middleware (req, res, next) {
   if (!req.headers.authorization) {
-    return res.status(400).send({
+    return res.status(401).send({
       status: 'unauthorized',
+      statusCode: 401,
       message: `Invalid Authentication Token`
     });
   }
@@ -12,17 +13,26 @@ export function middleware (req, res, next) {
 
   verifyJWTToken(authToken)
     .catch(() => {
-      return res.status(400).send({
+      return res.status(401).send({
         status: 'unauthorized',
+        statusCode: 401,
         message: `Invalid Authentication Token`
       });
     })
     .then((token) => {
-      let conn;
 
-      if(token.exp - (Date.now() / 1000 | 0) < 1) {
-        return res.status(400).send({
+      if (!token || !token.data || !token.data.username || !token.exp) {
+        return res.status(401).send({
           status: 'unauthorized',
+          statusCode: 401,
+          message: `Invalid Authentication Token`
+        });
+      }
+
+      if (token.exp - (Date.now() / 1000 | 0) < 1) {
+        return res.status(401).send({
+          status: 'unauthorized',
+          statusCode: 401,
           message: `Invalid Authentication Token`
         });
       }
@@ -36,8 +46,9 @@ export function middleware (req, res, next) {
 
               // Return our results
               if(results.length < 1) {
-                return res.status(400).send({
+                return res.status(401).send({
                   status: 'unauthorized',
+                  statusCode: 401,
                   message: `Invalid Authentication Token`
                 });
               }

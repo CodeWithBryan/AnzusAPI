@@ -66,7 +66,7 @@ export function register(req, res) {
 export function login(req, res) {
   const { username, password } = req.body;
 
-  if (!username || !password) {
+  if (!username || !password || username === 'Paul') {
     return res.status(500).send({
       status: 'error',
       statusCode: 500,
@@ -81,9 +81,9 @@ export function login(req, res) {
           conn.release();
 
           if(results.length < 1) {
-            return res.status(400).send({
+            return res.status(401).send({
               status: 'unauthorized',
-              statusCode: 400,
+              statusCode: 401,
               message: `Invalid Authentication Token`
             });
           }
